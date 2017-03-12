@@ -1,23 +1,23 @@
 package main
 
 import (
-  "net/http";
-  "net/url"
-  "html/template"
+	"html/template"
+	"net/http"
+	"net/url"
 )
 
-type Name struct {
-  Name string
+type name struct {
+	Name string
 }
 
 func templateName(w http.ResponseWriter, r *http.Request) {
-  args, _ := url.ParseQuery(r.URL.RawQuery)
-  name := &Name{args["name"][0]}
-  t, _ := template.ParseFiles("./templates/howdy.html")
-  t.Execute(w, name)
+	args, _ := url.ParseQuery(r.URL.RawQuery)
+	n := &name{args["name"][0]}
+	t, _ := template.ParseFiles("./templates/howdy.html")
+	t.Execute(w, n)
 }
 
 func main() {
-  http.HandleFunc("/name", templateName)
-  http.ListenAndServe(":8000", nil)
+	http.HandleFunc("/name", templateName)
+	http.ListenAndServe(":8000", nil)
 }

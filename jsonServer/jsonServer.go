@@ -7,16 +7,16 @@ import (
 	"net/url"
 )
 
-type User struct {
+type user struct {
 	Name        string
 	Description string
 }
 
-type UserLookup struct {
-	Users map[string]User
+type userLookup struct {
+	Users map[string]user
 }
 
-func (userLookup *UserLookup) handleUser(w http.ResponseWriter, r *http.Request) {
+func (lookup *userLookup) handleUser(w http.ResponseWriter, r *http.Request) {
 	args, _ := url.ParseQuery(r.URL.RawQuery)
 	name, namePresent := args["name"]
 	switch r.Method {
@@ -25,7 +25,7 @@ func (userLookup *UserLookup) handleUser(w http.ResponseWriter, r *http.Request)
 			userName := name[0]
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(userLookup.Users[userName])
+			json.NewEncoder(w).Encode(lookup.Users[userName])
 		} else {
 			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprintf(w, "Error: must supply user name")
@@ -33,19 +33,19 @@ func (userLookup *UserLookup) handleUser(w http.ResponseWriter, r *http.Request)
 	case "POST":
 		{
 			decoder := json.NewDecoder(r.Body)
-			var user User
-			err := decoder.Decode(&user)
+			var u user
+			err := decoder.Decode(&u)
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
 				fmt.Fprintf(w, "Error: unable to decode json payload")
 				return
 			}
-			if user.Name == "" || user.Description == "" {
+			if u.Name == "" || u.Description == "" {
 				w.WriteHeader(http.StatusBadRequest)
 				fmt.Fprintf(w, "Error: must specify user name and description")
 				return
 			}
-			userLookup.Users[user.Name] = user
+			lookup.Users[u.Name] = u
 			w.WriteHeader(http.StatusCreated)
 			fmt.Fprintf(w, "OK")
 		}
@@ -55,7 +55,7 @@ func (userLookup *UserLookup) handleUser(w http.ResponseWriter, r *http.Request)
 }
 
 func main() {
-	userLookup := UserLookup{make(map[string]User)}
-	http.HandleFunc("/user", userLookup.handleUser)
+	lookup := userLookup{make(map[string]user)}
+	http.HandleFunc("/user", lookup.handleUser)
 	http.ListenAndServe(":8000", nil)
 }
